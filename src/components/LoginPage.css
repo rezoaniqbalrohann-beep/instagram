@@ -9,7 +9,7 @@
 .auth-frame {
   width: 100%;
   max-width: 960px;
-  min-height: 600px;
+  min-height: 624px;
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   background-color: var(--bg-card);
@@ -176,11 +176,17 @@
   max-width: 344px;
 }
 
+.panel-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
 .brand-row {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 32px;
   color: var(--text-primary);
 }
 
@@ -198,6 +204,35 @@
   line-height: 1;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+.theme-toggle {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-control);
+  background-color: var(--bg-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out), transform 120ms var(--ease-out);
+}
+
+.theme-toggle:hover {
+  background-color: var(--bg-raised-hover);
+  color: var(--text-primary);
+}
+
+.theme-toggle:active {
+  transform: scale(0.97);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .view-enter {
@@ -266,6 +301,10 @@
   gap: 20px;
 }
 
+.auth-form-compact {
+  gap: 16px;
+}
+
 .field-group {
   display: flex;
   flex-direction: column;
@@ -305,7 +344,7 @@
 }
 
 .field-input:hover:not(:disabled) {
-  border-color: rgba(31, 27, 22, 0.28);
+  border-color: var(--hairline-hover);
 }
 
 .field-input:focus {
@@ -321,6 +360,25 @@
 .field-input-error:focus {
   border-color: var(--negative);
   box-shadow: 0 0 0 3px var(--negative-ring);
+}
+
+.prefix-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-prefix {
+  position: absolute;
+  left: 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.prefix-input {
+  padding-left: 28px;
 }
 
 .password-wrapper {
@@ -360,11 +418,65 @@
   outline-offset: 1px;
 }
 
+.field-hint {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--warning);
+}
+
 .field-error {
   margin: 0;
   font-size: 13px;
   line-height: 20px;
   color: var(--negative);
+}
+
+/* Password strength meter */
+.strength-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.strength-bars {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.strength-bar {
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--hairline-strong);
+  transition: background-color 180ms var(--ease-out);
+}
+
+.strength-level-1 {
+  background-color: var(--negative);
+}
+
+.strength-level-2 {
+  background-color: var(--warning);
+}
+
+.strength-level-3 {
+  background-color: var(--text-secondary);
+}
+
+.strength-level-4 {
+  background-color: var(--positive);
+}
+
+.strength-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-muted);
+  min-width: 48px;
+  text-align: right;
 }
 
 .text-link-button {
@@ -460,7 +572,7 @@
 }
 
 .secondary-button:hover {
-  background-color: #e6dfd3;
+  background-color: var(--bg-raised-hover);
 }
 
 .secondary-button:active {
@@ -470,6 +582,19 @@
 .secondary-button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.panel-footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-secondary);
 }
 
 /* Reset confirmation state */
@@ -531,9 +656,14 @@
   padding: 32px;
 }
 
-.session-status {
-  display: inline-block;
+.session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
+}
+
+.session-status {
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 16px;

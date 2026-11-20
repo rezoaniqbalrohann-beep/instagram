@@ -9,6 +9,7 @@
   --bg-page: #f7f4ee;
   --bg-card: #fdfbf7;
   --bg-raised: #efe9df;
+  --bg-raised-hover: #e6dfd3;
 
   /* Three text roles */
   --text-primary: #1f1b16;
@@ -18,6 +19,7 @@
   /* Quiet hairlines */
   --hairline: rgba(31, 27, 22, 0.08);
   --hairline-strong: rgba(31, 27, 22, 0.16);
+  --hairline-hover: rgba(31, 27, 22, 0.28);
 
   /* Single brand accent (>= 4.5:1 contrast with white text) */
   --accent: #c22d5b;
@@ -27,6 +29,7 @@
   /* Semantic tones */
   --positive: #16a34a;
   --positive-bg: rgba(22, 163, 74, 0.08);
+  --warning: #b45309;
   --negative: #dc2626;
   --negative-ring: rgba(220, 38, 38, 0.14);
 
@@ -50,6 +53,40 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+:root[data-theme='dark'] {
+  /* Warm dark neutral ramp */
+  --bg-page: #161513;
+  --bg-card: #1c1a18;
+  --bg-raised: #262421;
+  --bg-raised-hover: #302d29;
+
+  /* Three text roles */
+  --text-primary: #efe9de;
+  --text-secondary: #aaa398;
+  --text-muted: #8a847a;
+
+  /* Quiet hairlines */
+  --hairline: rgba(239, 233, 222, 0.08);
+  --hairline-strong: rgba(239, 233, 222, 0.16);
+  --hairline-hover: rgba(239, 233, 222, 0.28);
+
+  /* Accent */
+  --accent: #d94672;
+  --accent-hover: #c53661;
+  --accent-ring: rgba(217, 70, 114, 0.24);
+
+  /* Semantic tones */
+  --positive: #4cc38a;
+  --positive-bg: rgba(76, 195, 138, 0.12);
+  --warning: #e5a04d;
+  --negative: #e5484d;
+  --negative-ring: rgba(229, 72, 77, 0.2);
+
+  /* Depth comes from surface steps + hairlines on dark */
+  --shadow-subtle: none;
+  --shadow-float: none;
+}
+
 html,
 body,
 #root {
@@ -66,6 +103,8 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 220ms var(--ease-out),
+    color 220ms var(--ease-out);
 }
 
 button,

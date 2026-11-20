@@ -2,6 +2,22 @@ import { useState } from 'react';
 import './LoginPage.css';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_PATTERN = /^@?[a-zA-Z0-9._]{3,30}$/;
+
+function getPasswordStrength(value) {
+  if (!value) {
+    return { score: 0, label: '' };
+  }
+
+  let score = 0;
+  if (value.length >= 8) score += 1;
+  if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score += 1;
+  if (/\d/.test(value)) score += 1;
+  if (/[^a-zA-Z0-9]/.test(value) || value.length >= 12) score += 1;
+
+  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+  return { score, label: labels[score] };
+}
 
 function CameraGlyph() {
   return (
@@ -99,6 +115,50 @@ function CheckIcon() {
   );
 }
 
+function ThemeIcon({ theme }) {
+  if (theme === 'dark') {
+    return (
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="4" />
+        <line x1="12" y1="2" x2="12" y2="4" />
+        <line x1="12" y1="20" x2="12" y2="22" />
+        <line x1="4.93" y1="4.93" x2="6.34" y2="6.34" />
+        <line x1="17.66" y1="17.66" x2="19.07" y2="19.07" />
+        <line x1="2" y1="12" x2="4" y2="12" />
+        <line x1="20" y1="12" x2="22" y2="12" />
+        <line x1="4.93" y1="19.07" x2="6.34" y2="17.66" />
+        <line x1="17.66" y1="6.34" x2="19.07" y2="4.93" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
 function EditorialShowcase() {
   return (
     <aside className="showcase-panel" aria-hidden="true">
@@ -141,14 +201,26 @@ function EditorialShowcase() {
   );
 }
 
-export default function LoginPage({ onLoginSuccess }) {
+export default function LoginPage({ onLoginSuccess, theme, onToggleTheme }) {
   const [view, setView] = useState('login');
-  const [email, setEmail] = useState('');
+
+  // Sign in state
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Create account state
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [signupErrors, setSignupErrors] = useState({});
+  const [isCreating, setIsCreating] = useState(false);
 
   // Forgot password state
   const [resetEmail, setResetEmail] = useState('');
@@ -156,14 +228,25 @@ export default function LoginPage({ onLoginSuccess }) {
   const [resetSentTo, setResetSentTo] = useState('');
   const [isSendingReset, setIsSendingReset] = useState(false);
 
+  const passwordStrength = getPasswordStrength(signupPassword);
+
+  function handlePasswordKeyEvent(event) {
+    if (typeof event.getModifierState === 'function') {
+      setCapsLockOn(event.getModifierState('CapsLock'));
+    }
+  }
+
   function validateLogin() {
     const nextErrors = {};
-    const trimmedEmail = email.trim();
+    const trimmed = identifier.trim();
 
-    if (!trimmedEmail) {
-      nextErrors.email = 'Enter your email address';
-    } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
-      nextErrors.email = 'Enter a valid email address';
+    if (!trimmed) {
+      nextErrors.identifier = 'Enter your email or username';
+    } else if (
+      !EMAIL_PATTERN.test(trimmed) &&
+      !USERNAME_PATTERN.test(trimmed)
+    ) {
+      nextErrors.identifier = 'Enter a valid email address or username';
     }
 
     if (!password) {
@@ -189,25 +272,89 @@ export default function LoginPage({ onLoginSuccess }) {
     // Local simulated sign-in; no credentials are sent or stored externally.
     setTimeout(() => {
       setIsSubmitting(false);
+      const trimmed = identifier.trim();
+      const displayIdentifier = EMAIL_PATTERN.test(trimmed)
+        ? trimmed
+        : trimmed.startsWith('@')
+          ? trimmed
+          : `@${trimmed}`;
+
       onLoginSuccess({
-        email: email.trim(),
+        identifier: displayIdentifier,
         rememberMe,
       });
     }, 450);
   }
 
-  function openForgotPassword(event) {
+  function validateSignup() {
+    const nextErrors = {};
+    const trimmedName = fullName.trim();
+    const trimmedUsername = username.trim().replace(/^@+/, '');
+    const trimmedEmail = signupEmail.trim();
+
+    if (!trimmedName) {
+      nextErrors.fullName = 'Enter your full name';
+    }
+
+    if (!trimmedUsername) {
+      nextErrors.username = 'Choose a username';
+    } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
+      nextErrors.username = 'Use 3 to 30 letters, numbers, dots, or underscores';
+    }
+
+    if (!trimmedEmail) {
+      nextErrors.signupEmail = 'Enter your email address';
+    } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
+      nextErrors.signupEmail = 'Enter a valid email address';
+    }
+
+    if (!signupPassword) {
+      nextErrors.signupPassword = 'Create a password';
+    } else if (signupPassword.length < 8) {
+      nextErrors.signupPassword = 'Password must be at least 8 characters';
+    }
+
+    return nextErrors;
+  }
+
+  function handleSignupSubmit(event) {
     event.preventDefault();
-    setResetEmail(email.trim());
+    const validationErrors = validateSignup();
+    setSignupErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
+
+    setIsCreating(true);
+
+    // Local simulated account creation; no data is sent or stored externally.
+    setTimeout(() => {
+      setIsCreating(false);
+      const cleanHandle = username.trim().replace(/^@+/, '');
+      onLoginSuccess({
+        identifier: `@${cleanHandle}`,
+        fullName: fullName.trim(),
+        rememberMe: false,
+      });
+    }, 450);
+  }
+
+  function openForgotPassword() {
+    const trimmed = identifier.trim();
+    setResetEmail(EMAIL_PATTERN.test(trimmed) ? trimmed : '');
     setResetError('');
     setResetSentTo('');
     setView('forgot');
   }
 
-  function returnToLogin() {
+  function switchView(nextView) {
+    setErrors({});
+    setSignupErrors({});
     setResetError('');
     setResetSentTo('');
-    setView('login');
+    setCapsLockOn(false);
+    setView(nextView);
   }
 
   function handleResetSubmit(event) {
@@ -234,33 +381,55 @@ export default function LoginPage({ onLoginSuccess }) {
     }, 450);
   }
 
+  const headingId =
+    view === 'login'
+      ? 'login-heading'
+      : view === 'signup'
+        ? 'signup-heading'
+        : 'reset-heading';
+
   return (
     <main className="auth-shell">
       <div className="auth-frame">
         <EditorialShowcase />
 
-        <section
-          className="auth-panel"
-          aria-labelledby={
-            view === 'login' ? 'login-heading' : 'reset-heading'
-          }
-        >
+        <section className="auth-panel" aria-labelledby={headingId}>
           <div className="auth-panel-inner">
-            <div className="brand-row">
-              <span className="brand-glyph">
-                <CameraGlyph />
-              </span>
-              <span className="brand-wordmark">Instagram</span>
+            <div className="panel-topbar">
+              <div className="brand-row">
+                <span className="brand-glyph">
+                  <CameraGlyph />
+                </span>
+                <span className="brand-wordmark">Instagram</span>
+              </div>
+
+              <button
+                type="button"
+                className="theme-toggle"
+                onClick={onToggleTheme}
+                aria-label={
+                  theme === 'dark'
+                    ? 'Switch to light theme'
+                    : 'Switch to dark theme'
+                }
+                title={
+                  theme === 'dark'
+                    ? 'Switch to light theme'
+                    : 'Switch to dark theme'
+                }
+              >
+                <ThemeIcon theme={theme} />
+              </button>
             </div>
 
-            {view === 'login' ? (
+            {view === 'login' && (
               <div key="login-view" className="view-enter">
                 <header className="panel-header">
                   <h1 id="login-heading" className="panel-title">
                     Sign in to Instagram
                   </h1>
                   <p className="panel-subtitle">
-                    Enter your email and password to open your feed
+                    Use your email or username to open your feed
                   </p>
                 </header>
 
@@ -270,34 +439,41 @@ export default function LoginPage({ onLoginSuccess }) {
                   noValidate
                 >
                   <div className="field-group">
-                    <label htmlFor="email" className="field-label">
-                      Email address
+                    <label htmlFor="identifier" className="field-label">
+                      Email or username
                     </label>
                     <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="name@example.com"
+                      id="identifier"
+                      name="identifier"
+                      type="text"
+                      autoComplete="username"
+                      placeholder="name@example.com or @username"
                       className={`field-input ${
-                        errors.email ? 'field-input-error' : ''
+                        errors.identifier ? 'field-input-error' : ''
                       }`}
-                      value={email}
+                      value={identifier}
                       onChange={(event) => {
-                        setEmail(event.target.value);
-                        if (errors.email) {
-                          setErrors((prev) => ({ ...prev, email: undefined }));
+                        setIdentifier(event.target.value);
+                        if (errors.identifier) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            identifier: undefined,
+                          }));
                         }
                       }}
-                      aria-invalid={Boolean(errors.email)}
+                      aria-invalid={Boolean(errors.identifier)}
                       aria-describedby={
-                        errors.email ? 'email-error' : undefined
+                        errors.identifier ? 'identifier-error' : undefined
                       }
                       disabled={isSubmitting}
                     />
-                    {errors.email && (
-                      <p id="email-error" className="field-error" role="alert">
-                        {errors.email}
+                    {errors.identifier && (
+                      <p
+                        id="identifier-error"
+                        className="field-error"
+                        role="alert"
+                      >
+                        {errors.identifier}
                       </p>
                     )}
                   </div>
@@ -336,9 +512,16 @@ export default function LoginPage({ onLoginSuccess }) {
                             }));
                           }
                         }}
+                        onKeyDown={handlePasswordKeyEvent}
+                        onKeyUp={handlePasswordKeyEvent}
+                        onBlur={() => setCapsLockOn(false)}
                         aria-invalid={Boolean(errors.password)}
                         aria-describedby={
-                          errors.password ? 'password-error' : undefined
+                          errors.password
+                            ? 'password-error'
+                            : capsLockOn
+                              ? 'caps-warning'
+                              : undefined
                         }
                         disabled={isSubmitting}
                       />
@@ -355,6 +538,11 @@ export default function LoginPage({ onLoginSuccess }) {
                         <EyeIcon visible={showPassword} />
                       </button>
                     </div>
+                    {capsLockOn && !errors.password && (
+                      <p id="caps-warning" className="field-hint" role="status">
+                        Caps Lock is on
+                      </p>
+                    )}
                     {errors.password && (
                       <p
                         id="password-error"
@@ -384,13 +572,282 @@ export default function LoginPage({ onLoginSuccess }) {
                     {isSubmitting ? 'Signing in...' : 'Sign in'}
                   </button>
                 </form>
+
+                <footer className="panel-footer">
+                  <span>New to Instagram?</span>
+                  <button
+                    type="button"
+                    className="text-link-button"
+                    onClick={() => switchView('signup')}
+                    disabled={isSubmitting}
+                  >
+                    Create account
+                  </button>
+                </footer>
               </div>
-            ) : (
+            )}
+
+            {view === 'signup' && (
+              <div key="signup-view" className="view-enter">
+                <header className="panel-header">
+                  <h1 id="signup-heading" className="panel-title">
+                    Create account
+                  </h1>
+                  <p className="panel-subtitle">
+                    Set up your profile to start sharing photographs
+                  </p>
+                </header>
+
+                <form
+                  className="auth-form auth-form-compact"
+                  onSubmit={handleSignupSubmit}
+                  noValidate
+                >
+                  <div className="field-group">
+                    <label htmlFor="full-name" className="field-label">
+                      Full name
+                    </label>
+                    <input
+                      id="full-name"
+                      name="full-name"
+                      type="text"
+                      autoComplete="name"
+                      placeholder="Amina Rahman"
+                      className={`field-input ${
+                        signupErrors.fullName ? 'field-input-error' : ''
+                      }`}
+                      value={fullName}
+                      onChange={(event) => {
+                        setFullName(event.target.value);
+                        if (signupErrors.fullName) {
+                          setSignupErrors((prev) => ({
+                            ...prev,
+                            fullName: undefined,
+                          }));
+                        }
+                      }}
+                      aria-invalid={Boolean(signupErrors.fullName)}
+                      aria-describedby={
+                        signupErrors.fullName ? 'full-name-error' : undefined
+                      }
+                      disabled={isCreating}
+                    />
+                    {signupErrors.fullName && (
+                      <p
+                        id="full-name-error"
+                        className="field-error"
+                        role="alert"
+                      >
+                        {signupErrors.fullName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="field-group">
+                    <label htmlFor="username" className="field-label">
+                      Username
+                    </label>
+                    <div className="prefix-wrapper">
+                      <span className="input-prefix" aria-hidden="true">
+                        @
+                      </span>
+                      <input
+                        id="username"
+                        name="username"
+                        type="text"
+                        autoComplete="username"
+                        placeholder="amina.studio"
+                        className={`field-input prefix-input ${
+                          signupErrors.username ? 'field-input-error' : ''
+                        }`}
+                        value={username}
+                        onChange={(event) => {
+                          setUsername(event.target.value.replace(/^@+/, ''));
+                          if (signupErrors.username) {
+                            setSignupErrors((prev) => ({
+                              ...prev,
+                              username: undefined,
+                            }));
+                          }
+                        }}
+                        aria-invalid={Boolean(signupErrors.username)}
+                        aria-describedby={
+                          signupErrors.username ? 'username-error' : undefined
+                        }
+                        disabled={isCreating}
+                      />
+                    </div>
+                    {signupErrors.username && (
+                      <p
+                        id="username-error"
+                        className="field-error"
+                        role="alert"
+                      >
+                        {signupErrors.username}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="field-group">
+                    <label htmlFor="signup-email" className="field-label">
+                      Email address
+                    </label>
+                    <input
+                      id="signup-email"
+                      name="signup-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="name@example.com"
+                      className={`field-input ${
+                        signupErrors.signupEmail ? 'field-input-error' : ''
+                      }`}
+                      value={signupEmail}
+                      onChange={(event) => {
+                        setSignupEmail(event.target.value);
+                        if (signupErrors.signupEmail) {
+                          setSignupErrors((prev) => ({
+                            ...prev,
+                            signupEmail: undefined,
+                          }));
+                        }
+                      }}
+                      aria-invalid={Boolean(signupErrors.signupEmail)}
+                      aria-describedby={
+                        signupErrors.signupEmail
+                          ? 'signup-email-error'
+                          : undefined
+                      }
+                      disabled={isCreating}
+                    />
+                    {signupErrors.signupEmail && (
+                      <p
+                        id="signup-email-error"
+                        className="field-error"
+                        role="alert"
+                      >
+                        {signupErrors.signupEmail}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="field-group">
+                    <label htmlFor="signup-password" className="field-label">
+                      Password
+                    </label>
+                    <div className="password-wrapper">
+                      <input
+                        id="signup-password"
+                        name="signup-password"
+                        type={showSignupPassword ? 'text' : 'password'}
+                        autoComplete="new-password"
+                        placeholder="At least 8 characters"
+                        className={`field-input password-input ${
+                          signupErrors.signupPassword ? 'field-input-error' : ''
+                        }`}
+                        value={signupPassword}
+                        onChange={(event) => {
+                          setSignupPassword(event.target.value);
+                          if (signupErrors.signupPassword) {
+                            setSignupErrors((prev) => ({
+                              ...prev,
+                              signupPassword: undefined,
+                            }));
+                          }
+                        }}
+                        onKeyDown={handlePasswordKeyEvent}
+                        onKeyUp={handlePasswordKeyEvent}
+                        onBlur={() => setCapsLockOn(false)}
+                        aria-invalid={Boolean(signupErrors.signupPassword)}
+                        aria-describedby={
+                          signupErrors.signupPassword
+                            ? 'signup-password-error'
+                            : undefined
+                        }
+                        disabled={isCreating}
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => setShowSignupPassword((prev) => !prev)}
+                        aria-label={
+                          showSignupPassword ? 'Hide password' : 'Show password'
+                        }
+                        aria-pressed={showSignupPassword}
+                        disabled={isCreating}
+                      >
+                        <EyeIcon visible={showSignupPassword} />
+                      </button>
+                    </div>
+
+                    {signupPassword && (
+                      <div
+                        className="strength-row"
+                        aria-label={`Password strength: ${passwordStrength.label}`}
+                      >
+                        <div className="strength-bars" aria-hidden="true">
+                          {[1, 2, 3, 4].map((step) => (
+                            <span
+                              key={step}
+                              className={`strength-bar ${
+                                step <= passwordStrength.score
+                                  ? `strength-level-${passwordStrength.score}`
+                                  : ''
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="strength-label">
+                          {passwordStrength.label}
+                        </span>
+                      </div>
+                    )}
+
+                    {capsLockOn && !signupErrors.signupPassword && (
+                      <p className="field-hint" role="status">
+                        Caps Lock is on
+                      </p>
+                    )}
+
+                    {signupErrors.signupPassword && (
+                      <p
+                        id="signup-password-error"
+                        className="field-error"
+                        role="alert"
+                      >
+                        {signupErrors.signupPassword}
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="primary-button"
+                    disabled={isCreating}
+                  >
+                    {isCreating ? 'Creating account...' : 'Create account'}
+                  </button>
+                </form>
+
+                <footer className="panel-footer">
+                  <span>Already have an account?</span>
+                  <button
+                    type="button"
+                    className="text-link-button"
+                    onClick={() => switchView('login')}
+                    disabled={isCreating}
+                  >
+                    Sign in
+                  </button>
+                </footer>
+              </div>
+            )}
+
+            {view === 'forgot' && (
               <div key="forgot-view" className="view-enter">
                 <button
                   type="button"
                   className="back-button"
-                  onClick={returnToLogin}
+                  onClick={() => switchView('login')}
                 >
                   <ArrowLeftIcon />
                   <span>Back to sign in</span>
@@ -426,7 +883,7 @@ export default function LoginPage({ onLoginSuccess }) {
                       <button
                         type="button"
                         className="primary-button"
-                        onClick={returnToLogin}
+                        onClick={() => switchView('login')}
                       >
                         Return to sign in
                       </button>
