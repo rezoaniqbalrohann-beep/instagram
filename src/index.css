@@ -1,0 +1,74 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  /* Warm light neutral ramp */
+  --bg-page: #f7f4ee;
+  --bg-card: #fdfbf7;
+  --bg-raised: #efe9df;
+
+  /* Three text roles */
+  --text-primary: #1f1b16;
+  --text-secondary: #5e554a;
+  --text-muted: #7b7266;
+
+  /* Quiet hairlines */
+  --hairline: rgba(31, 27, 22, 0.08);
+  --hairline-strong: rgba(31, 27, 22, 0.16);
+
+  /* Single brand accent (>= 4.5:1 contrast with white text) */
+  --accent: #c22d5b;
+  --accent-hover: #a8234d;
+  --accent-ring: rgba(194, 45, 91, 0.18);
+
+  /* Semantic tones */
+  --positive: #16a34a;
+  --positive-bg: rgba(22, 163, 74, 0.08);
+  --negative: #dc2626;
+  --negative-ring: rgba(220, 38, 38, 0.14);
+
+  /* Typography */
+  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Radius scale */
+  --radius-sm: 6px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-panel: 16px;
+
+  /* Depth */
+  --shadow-subtle: 0 1px 2px rgba(31, 27, 22, 0.05);
+  --shadow-float: 0 8px 24px rgba(31, 27, 22, 0.06);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input {
+  font-family: inherit;
+}
